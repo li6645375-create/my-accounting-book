@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的记账本</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f7fb;color:#1f2937;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+.container{max-width:680px;margin:0 auto;padding:24px 16px 48px}
+.card{background:#fff;border-radius:20px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.06)}
+h1{margin:0 0 6px;font-size:30px}.subtitle{margin:0 0 24px;color:#6b7280}
+.form{display:grid;gap:12px}label{display:block;margin-bottom:6px;font-size:14px;color:#4b5563}
+input{width:100%;padding:13px 14px;border:1px solid #d1d5db;border-radius:12px;font-size:16px;outline:none}
+input:focus{border-color:#6b7280}
+button{border:0;border-radius:12px;padding:13px 16px;font-size:16px;cursor:pointer}
+.add{background:#111827;color:#fff}
+.summary{margin-top:24px;padding:18px;border-radius:16px;background:#f3f4f6;display:flex;justify-content:space-between;align-items:center}
+.total{font-size:26px;font-weight:700}
+.list{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:10px}
+.item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px;border:1px solid #e5e7eb;border-radius:14px}
+.item-name{font-weight:600}.item-right{display:flex;align-items:center;gap:10px}.item-amount{font-weight:700}
+.delete{background:#f3f4f6;color:#4b5563;padding:8px 10px;font-size:13px}
+.empty{text-align:center;padding:30px 10px;color:#9ca3af}
+@media(max-width:520px){.card{padding:18px}h1{font-size:26px}.item{align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="container"><div class="card">
+<h1>我的记账本</h1>
+<p class="subtitle">记录每一笔日常消费，清楚知道钱花在哪里。</p>
+<form id="expenseForm" class="form">
+<div><label for="name">消费名称</label><input id="name" type="text" placeholder="例如：午饭" maxlength="50" required></div>
+<div><label for="amount">消费金额</label><input id="amount" type="number" min="0.01" step="0.01" placeholder="例如：35.50" required></div>
+<button class="add" type="submit">添加</button>
+</form>
+<div class="summary"><span>总支出</span><span id="total" class="total">¥0.00</span></div>
+<ul id="expenseList" class="list"></ul>
+<div id="empty" class="empty">还没有消费记录，添加第一笔吧。</div>
+</div></div>
+<script>
+const form=document.getElementById('expenseForm'),nameInput=document.getElementById('name'),amountInput=document.getElementById('amount'),list=document.getElementById('expenseList'),totalEl=document.getElementById('total'),emptyEl=document.getElementById('empty');
+let expenses=JSON.parse(localStorage.getItem('my-accounting-book')||'[]');
+function save(){localStorage.setItem('my-accounting-book',JSON.stringify(expenses))}
+function render(){
+list.innerHTML='';emptyEl.style.display=expenses.length?'none':'block';
+expenses.forEach((expense,index)=>{
+const li=document.createElement('li');li.className='item';
+const left=document.createElement('div'),name=document.createElement('div');name.className='item-name';name.textContent=expense.name;left.appendChild(name);
+const right=document.createElement('div');right.className='item-right';
+const amount=document.createElement('div');amount.className='item-amount';amount.textContent=`¥${expense.amount.toFixed(2)}`;
+const del=document.createElement('button');del.type='button';del.className='delete';del.textContent='删除';
+del.addEventListener('click',()=>{expenses.splice(index,1);save();render()});
+right.append(amount,del);li.append(left,right);list.appendChild(li);
+});
+totalEl.textContent=`¥${expenses.reduce((sum,item)=>sum+item.amount,0).toFixed(2)}`;
+}
+form.addEventListener('submit',e=>{e.preventDefault();const name=nameInput.value.trim(),amount=Number(amountInput.value);if(!name||!Number.isFinite(amount)||amount<=0)return;expenses.unshift({name,amount});save();render();form.reset();nameInput.focus()});
+render();
+</script>
+</body>
+</html>
